@@ -9,15 +9,12 @@ public final class NullArmyController {
     public static final int DEFAULT_SOLDIERS = 15;
     public static final int DEFAULT_COMMANDERS = 2;
     private static final int MAX_UNITS = 64;
-
     private static final List<ArmyUnit> UNITS = new ArrayList<>();
     private static ArmyOrder order = ArmyOrder.HOLD;
     private static Formation formation = Formation.WEDGE;
     private static Kit selectedKit = Kit.SWORD;
     private static String target = "";
-    private static double destinationX;
-    private static double destinationY;
-    private static double destinationZ;
+    private static double destinationX, destinationY, destinationZ;
     private static boolean hasDestination;
 
     private NullArmyController() {}
@@ -36,49 +33,37 @@ public final class NullArmyController {
     }
 
     public static void dismiss() {
-        UNITS.clear();
-        target = "";
-        hasDestination = false;
-        order = ArmyOrder.HOLD;
+        UNITS.clear(); target = ""; hasDestination = false; order = ArmyOrder.HOLD;
     }
-
     public static void setTarget(String value) {
         target = value == null ? "" : value;
         order = target.isBlank() ? ArmyOrder.HOLD : ArmyOrder.ATTACK;
     }
-
     public static void goTo(double x, double y, double z) {
-        destinationX = x; destinationY = y; destinationZ = z;
-        hasDestination = true;
-        order = ArmyOrder.MOVE;
+        destinationX = x; destinationY = y; destinationZ = z; hasDestination = true; order = ArmyOrder.MOVE;
     }
-
     public static void setOrder(ArmyOrder next) {
         order = next;
         if (next == ArmyOrder.FOLLOW) hasDestination = false;
     }
-
     public static void setFormation(Formation next) { formation = next; }
     public static void setKit(Kit next) { selectedKit = next; }
     public static Kit selectedKit() { return selectedKit; }
-    public static int soldierCount() { return (int) UNITS.stream().filter(unit -> unit.role == UnitRole.SOLDIER).count(); }
-    public static int commanderCount() { return (int) UNITS.stream().filter(unit -> unit.role == UnitRole.COMMANDER).count(); }
+    public static int soldierCount() { return (int) UNITS.stream().filter(u -> u.role == UnitRole.SOLDIER).count(); }
+    public static int commanderCount() { return (int) UNITS.stream().filter(u -> u.role == UnitRole.COMMANDER).count(); }
     public static int totalCount() { return UNITS.size(); }
 
     public static String orderLabel() {
-        return "ORDER: " + order.name().toLowerCase()
-            + "   FORMATION: " + formation.name().toLowerCase()
+        return "ORDER: " + order.name().toLowerCase() + "   FORMATION: " + formation.name().toLowerCase()
             + (target.isBlank() ? "" : "   TARGET: " + target);
     }
-
     public static String status() {
         return "Army: " + commanderCount() + " commanders, " + soldierCount()
             + " soldiers | Order: " + order.name().toLowerCase()
             + " | Formation: " + formation.name().toLowerCase()
-            + " | Kit: " + selectedKit.name().toLowerCase()
+            + " | Kit: " + selectedKit.commandName()
             + " | Target: " + (target.isBlank() ? "none" : target);
     }
-
     public static List<ArmyUnit> unitsView() { return Collections.unmodifiableList(UNITS); }
 
     public static void tick(Minecraft client) {
@@ -90,11 +75,9 @@ public final class NullArmyController {
             double tx = px + offset[0], ty = py, tz = pz + offset[1];
             if (order == ArmyOrder.MOVE && hasDestination) {
                 tx = destinationX + offset[0]; ty = destinationY; tz = destinationZ + offset[1];
-            } else if (order == ArmyOrder.HOLD || order == ArmyOrder.DEFEND
-                    || order == ArmyOrder.STOP || order == ArmyOrder.ATTACK) {
+            } else if (order == ArmyOrder.HOLD || order == ArmyOrder.DEFEND || order == ArmyOrder.STOP || order == ArmyOrder.ATTACK) {
                 if (!unit.initialized) {
-                    unit.x = px + offset[0]; unit.y = py; unit.z = pz + offset[1];
-                    unit.initialized = true;
+                    unit.x = px + offset[0]; unit.y = py; unit.z = pz + offset[1]; unit.initialized = true;
                 }
                 continue;
             }
@@ -105,9 +88,7 @@ public final class NullArmyController {
                 double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
                 double step = Math.min(0.12, distance);
                 if (distance > 0.01) {
-                    unit.x += dx / distance * step;
-                    unit.y += dy / distance * step;
-                    unit.z += dz / distance * step;
+                    unit.x += dx / distance * step; unit.y += dy / distance * step; unit.z += dz / distance * step;
                 }
             }
         }
@@ -125,7 +106,12 @@ public final class NullArmyController {
     public enum UnitRole { SOLDIER, COMMANDER }
     public enum ArmyOrder { FOLLOW, MOVE, DEFEND, ATTACK, STOP, HOLD }
     public enum Formation { LINE, COLUMN, WEDGE }
-    public enum Kit { ELYTRA, MACE, SWORD, ARCHER, ASSAULT }
+    public enum Kit {
+        SWORD("sword"), MACE("mace"), ELYTRA_MACE("elytra_mace");
+        private final String commandName;
+        Kit(String commandName) { this.commandName = commandName; }
+        public String commandName() { return commandName; }
+    }
 
     public static final class ArmyUnit {
         private final UnitRole role;
@@ -133,9 +119,7 @@ public final class NullArmyController {
         private final Kit kit;
         private double x, y, z;
         private boolean initialized;
-        private ArmyUnit(UnitRole role, int number, Kit kit) {
-            this.role = role; this.number = number; this.kit = kit;
-        }
+        private ArmyUnit(UnitRole role, int number, Kit kit) { this.role = role; this.number = number; this.kit = kit; }
         public UnitRole role() { return role; }
         public int number() { return number; }
         public Kit kit() { return kit; }
