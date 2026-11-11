@@ -31,8 +31,8 @@ public final class NullArmyCommands {
                     NullArmyController.Kit kit = parseKit(StringArgumentType.getString(c, "playerKit"));
                     if (kit == null || kit == NullArmyController.Kit.NONE || kit == NullArmyController.Kit.ARCHER || kit == NullArmyController.Kit.ASSAULT)
                         return reply(c, "Choose sword, mace, or elytra_mace.");
-                    NullArmyController.givePlayerKit(kit);
-                    return reply(c, "Gave you the " + kit.commandName() + " kit.");
+                    if (!NullArmyController.givePlayerKit(kit)) return reply(c, "You must be in a world to equip a kit.");
+                    return reply(c, "Applied your " + kit.commandName() + " kit locally. A multiplayer server may overwrite client-only equipment.");
                 }))))
             .then(ClientCommands.literal("army").then(ClientCommands.literal("kit")
                 .then(ClientCommands.argument("armyKit", StringArgumentType.word()).executes(c -> {
@@ -119,8 +119,8 @@ public final class NullArmyCommands {
     }
 
     private static int kit(com.mojang.brigadier.context.CommandContext<FabricClientCommandSource> context, NullArmyController.Kit kit) {
-        NullArmyController.givePlayerKit(kit);
-        return reply(context, "Gave you the " + kit.commandName() + " player kit.");
+        if (!NullArmyController.givePlayerKit(kit)) return reply(context, "You must be in a world to equip a kit.");
+        return reply(context, "Applied your " + kit.commandName() + " kit locally. A multiplayer server may overwrite client-only equipment.");
     }
     private static int formation(com.mojang.brigadier.context.CommandContext<FabricClientCommandSource> context, NullArmyController.Formation formation) {
         NullArmyController.setFormation(formation);
