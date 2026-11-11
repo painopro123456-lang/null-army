@@ -14,7 +14,7 @@ public final class NullArmyHud {
         int left = 10;
         int top = 10;
         int right = 190;
-        int bottom = 76;
+        int bottom = 88;
 
         graphics.fill(left, top, right, bottom, 0xB90A0D13);
         graphics.fill(left, top, left + 2, bottom, 0xFF9B111E);
@@ -27,11 +27,13 @@ public final class NullArmyHud {
             18, 29, 0xFFB7C0CE, true);
         graphics.text(minecraft.font, NullArmyController.orderLabel(),
             18, 43, 0xFFFFFFFF, true);
+        graphics.text(minecraft.font, "NEXT KIT: " + NullArmyController.selectedKit().name().toLowerCase(),
+            18, 56, 0xFF91C8FF, true);
 
         int index = 0;
         for (NullArmyController.ArmyUnit unit : NullArmyController.unitsView()) {
             int x = 18 + (index % 14) * 11;
-            int y = 59 + (index / 14) * 8;
+            int y = 71 + (index / 14) * 8;
             int color = unit.role() == NullArmyController.UnitRole.COMMANDER
                 ? 0xFFFFC857 : 0xFFB9C2D0;
             graphics.fill(x, y, x + 6, y + 5, color);
