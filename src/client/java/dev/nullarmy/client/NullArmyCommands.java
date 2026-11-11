@@ -76,6 +76,9 @@ public final class NullArmyCommands {
                 .then(ClientCommands.literal("wedge").executes(context -> formation(context, NullArmyController.Formation.WEDGE))))
             .then(ClientCommands.literal("status")
                 .executes(context -> reply(context, NullArmyController.status())))
+            .then(ClientCommands.literal("help")
+                .executes(context -> reply(context,
+                    "spawn | spawn <soldiers> <commanders> | target <player|nearest|clear> | goto <x> <y> <z> | follow | defend | attack | stop | formation <line|column|wedge> | status | dismiss")))
             .then(ClientCommands.literal("dismiss")
                 .executes(context -> {
                     NullArmyController.dismiss();
