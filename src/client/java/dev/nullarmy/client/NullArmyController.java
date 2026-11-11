@@ -3,6 +3,9 @@ package dev.nullarmy.client;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.InteractionHand;
@@ -26,6 +29,8 @@ public final class NullArmyController {
     private static ArmyOrder order = ArmyOrder.HOLD;
     private static Formation formation = Formation.WEDGE;
     private static Kit selectedKit = Kit.SWORD;
+    private static Kit armyKit = Kit.NONE;
+    private static final Set<String> WHITELIST = new HashSet<>();
     private static String target = "";
     private static double destinationX, destinationY, destinationZ;
     private static boolean hasDestination;
@@ -42,8 +47,8 @@ public final class NullArmyController {
         dismissVisuals();
         int safeSoldiers = Math.max(0, Math.min(soldiers, MAX_UNITS));
         int safeCommanders = Math.max(0, Math.min(commanders, MAX_UNITS - safeSoldiers));
-        for (int i = 0; i < safeCommanders; i++) UNITS.add(new ArmyUnit(UnitRole.COMMANDER, i, selectedKit));
-        for (int i = 0; i < safeSoldiers; i++) UNITS.add(new ArmyUnit(UnitRole.SOLDIER, i, selectedKit));
+        for (int i = 0; i < safeCommanders; i++) UNITS.add(new ArmyUnit(UnitRole.COMMANDER, i, armyKit));
+        for (int i = 0; i < safeSoldiers; i++) UNITS.add(new ArmyUnit(UnitRole.SOLDIER, i, armyKit));
         order = ArmyOrder.FOLLOW;
         target = "";
         hasDestination = false;
@@ -71,7 +76,7 @@ public final class NullArmyController {
         visual.setCustomName(Component.literal(unit.role == UnitRole.COMMANDER
             ? "Null Commander " + (unit.number + 1) : "Null Soldier " + (unit.number + 1)));
         visual.setCustomNameVisible(true);
-        equip(visual, unit.kit);
+        if (unit.kit != Kit.NONE) equip(visual, unit.kit);
         visual.setPos(unit.x, unit.y, unit.z);
         visual.setId(nextEntityId--);
         level.addEntity(visual);
@@ -108,9 +113,68 @@ public final class NullArmyController {
         hasDestination = false;
         order = ArmyOrder.HOLD;
     }
-    public static void setTarget(String value) {
-        target = value == null ? "" : value;
-        order = target.isBlank() ? ArmyOrder.HOLD : ArmyOrder.ATTACK;
+    public static void setTarget(String value) { target = value == null ? "" : value; }
+
+    public static boolean issueAttackOrder() {
+        Minecraft client = Minecraft.getInstance();
+        if (target.isBlank() || isWhitelisted(target) || client.level == null || findTarget(client) == null) return false;
+        order = ArmyOrder.ATTACK;
+        return true;
+    }
+
+    public static boolean isWhitelisted(String name) {
+        Minecraft client = Minecraft.getInstance();
+        if (name == null) return false;
+        if (client.player != null && client.player.getName().getString().equalsIgnoreCase(name)) return true;
+        return WHITELIST.stream().anyMatch(entry -> entry.equalsIgnoreCase(name));
+    }
+
+    public static void addWhitelist(String name) {
+        if (name != null && !name.isBlank()) WHITELIST.add(name);
+        if (!target.isBlank() && isWhitelisted(target)) {
+            target = "";
+            if (order == ArmyOrder.ATTACK) order = ArmyOrder.STOP;
+        }
+    }
+
+    public static boolean removeWhitelist(String name) {
+        Minecraft client = Minecraft.getInstance();
+        if (name == null || (client.player != null && client.player.getName().getString().equalsIgnoreCase(name))) return false;
+        return WHITELIST.removeIf(entry -> entry.equalsIgnoreCase(name));
+    }
+
+    public static String whitelistStatus() {
+        Set<String> names = new HashSet<>(WHITELIST);
+        Minecraft client = Minecraft.getInstance();
+        if (client.player != null) names.add(client.player.getName().getString() + " (owner)");
+        return names.isEmpty() ? "owner only" : String.join(", ", names);
+    }
+
+    public static void givePlayerKit(Kit kit) {
+        selectedKit = kit;
+        Minecraft client = Minecraft.getInstance();
+        if (client.player == null) return;
+        var player = client.player;
+        player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.NETHERITE_HELMET));
+        player.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.NETHERITE_LEGGINGS));
+        player.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.NETHERITE_BOOTS));
+        if (kit == Kit.ELYTRA_MACE) {
+            player.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.ELYTRA));
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.MACE));
+            player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.FIREWORK_ROCKET, 64));
+        } else {
+            player.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.NETHERITE_CHESTPLATE));
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(kit == Kit.MACE ? Items.MACE : Items.NETHERITE_SWORD));
+            player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(kit == Kit.SWORD ? Items.SHIELD : Items.WIND_CHARGE, kit == Kit.SWORD ? 1 : 16));
+        }
+    }
+
+    public static void setArmyKit(Kit kit) {
+        armyKit = kit;
+        for (ArmyUnit unit : UNITS) {
+            unit.kit = kit;
+            if (unit.visual != null) equip(unit.visual, kit);
+        }
     }
     public static void goTo(double x, double y, double z) {
         destinationX = x; destinationY = y; destinationZ = z; hasDestination = true; order = ArmyOrder.MOVE;
@@ -134,7 +198,7 @@ public final class NullArmyController {
         return "Army: " + commanderCount() + " commanders, " + soldierCount()
             + " soldiers | Order: " + order.name().toLowerCase()
             + " | Formation: " + formation.name().toLowerCase()
-            + " | Kit: " + selectedKit.commandName()
+            + " | Army kit: " + armyKit.commandName() + " | Player kit: " + selectedKit.commandName()
             + " | Target: " + (target.isBlank() ? "none" : target);
     }
     public static List<ArmyUnit> unitsView() { return Collections.unmodifiableList(UNITS); }
@@ -152,6 +216,7 @@ public final class NullArmyController {
         if (UNITS.isEmpty()) return;
         tickCounter++;
         LivingEntity targetEntity = order == ArmyOrder.ATTACK ? findTarget(client) : null;
+        if (order == ArmyOrder.ATTACK && targetEntity == null) { order = ArmyOrder.STOP; return; }
         double px = client.player.getX(), py = client.player.getY(), pz = client.player.getZ();
         for (int i = 0; i < UNITS.size(); i++) {
             ArmyUnit unit = UNITS.get(i);
@@ -192,12 +257,12 @@ public final class NullArmyController {
     }
 
     private static LivingEntity findTarget(Minecraft client) {
-        if (target.isBlank()) return null;
-        List<LivingEntity> candidates = client.level.getEntitiesOfClass(
-            LivingEntity.class, client.player.getBoundingBox().inflate(64.0),
-            entity -> entity != client.player && entity.isAlive() && !isArmyVisual(entity)
-                && (target.equalsIgnoreCase("nearest")
-                    || entity.getName().getString().equalsIgnoreCase(target))
+        if (target.isBlank() || isWhitelisted(target)) return null;
+        List<Player> candidates = client.level.getEntitiesOfClass(
+            Player.class, client.player.getBoundingBox().inflate(128.0),
+            player -> player != client.player && player.isAlive()
+                && player.getName().getString().equalsIgnoreCase(target)
+                && !isWhitelisted(player.getName().getString())
         );
         return candidates.stream().min((a, b) ->
             Double.compare(a.distanceToSqr(client.player), b.distanceToSqr(client.player))).orElse(null);
@@ -231,7 +296,7 @@ public final class NullArmyController {
     public enum ArmyOrder { FOLLOW, MOVE, DEFEND, ATTACK, STOP, HOLD }
     public enum Formation { LINE, COLUMN, WEDGE }
     public enum Kit {
-        SWORD("sword"), MACE("mace"), ELYTRA_MACE("elytra_mace");
+        NONE("none"), SWORD("sword"), MACE("mace"), ELYTRA_MACE("elytra_mace"), ARCHER("archer"), ASSAULT("assault");
         private final String commandName;
         Kit(String commandName) { this.commandName = commandName; }
         public String commandName() { return commandName; }
@@ -240,7 +305,7 @@ public final class NullArmyController {
     public static final class ArmyUnit {
         private final UnitRole role;
         private final int number;
-        private final Kit kit;
+        private Kit kit;
         private double x, y, z;
         private boolean initialized;
         private NullSoldierEntity visual;
