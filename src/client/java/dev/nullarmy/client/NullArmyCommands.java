@@ -26,6 +26,34 @@ public final class NullArmyCommands {
                             NullArmyController.spawn(soldiers, commanders);
                             return reply(context, "Created " + soldiers + " soldiers and " + commanders + " commanders.");
                         }))))
+            .then(ClientCommands.literal("set").then(ClientCommands.literal("kit")
+                .then(ClientCommands.argument("playerKit", StringArgumentType.word()).executes(c -> {
+                    NullArmyController.Kit kit = parseKit(StringArgumentType.getString(c, "playerKit"));
+                    if (kit == null || kit == NullArmyController.Kit.NONE || kit == NullArmyController.Kit.ARCHER || kit == NullArmyController.Kit.ASSAULT)
+                        return reply(c, "Choose sword, mace, or elytra_mace.");
+                    NullArmyController.givePlayerKit(kit);
+                    return reply(c, "Gave you the " + kit.commandName() + " kit.");
+                }))))
+            .then(ClientCommands.literal("army").then(ClientCommands.literal("kit")
+                .then(ClientCommands.argument("armyKit", StringArgumentType.word()).executes(c -> {
+                    NullArmyController.Kit kit = parseKit(StringArgumentType.getString(c, "armyKit"));
+                    if (kit == null || kit == NullArmyController.Kit.NONE || kit == NullArmyController.Kit.ARCHER || kit == NullArmyController.Kit.ASSAULT)
+                        return reply(c, "Choose sword, mace, or elytra_mace.");
+                    NullArmyController.setArmyKit(kit);
+                    return reply(c, "Equipped the Null army with " + kit.commandName() + ".");
+                }))))
+            .then(ClientCommands.literal("whitelist")
+                .then(ClientCommands.literal("add").then(ClientCommands.argument("name", StringArgumentType.word()).executes(c -> {
+                    String name = StringArgumentType.getString(c, "name");
+                    NullArmyController.addWhitelist(name);
+                    return reply(c, name + " is protected.");
+                })))
+                .then(ClientCommands.literal("remove").then(ClientCommands.argument("name", StringArgumentType.word()).executes(c -> {
+                    String name = StringArgumentType.getString(c, "name");
+                    if (!NullArmyController.removeWhitelist(name)) return reply(c, "Cannot remove owner protection or player is not listed.");
+                    return reply(c, name + " removed from whitelist.");
+                })))
+                .then(ClientCommands.literal("list").executes(c -> reply(c, "Protected players: " + NullArmyController.whitelistStatus()))))
             .then(ClientCommands.literal("kit")
                 .executes(context -> reply(context, "Current kit: " + NullArmyController.selectedKit().commandName()
                     + ". Choose: sword, mace, elytra_mace. Set it before /null spawn."))
@@ -74,7 +102,7 @@ public final class NullArmyCommands {
                 .then(ClientCommands.literal("wedge").executes(context -> formation(context, NullArmyController.Formation.WEDGE))))
             .then(ClientCommands.literal("status").executes(context -> reply(context, NullArmyController.status())))
             .then(ClientCommands.literal("help").executes(context -> reply(context,
-                "spawn | spawn <soldiers> <commanders> | kit <sword|mace|elytra_mace> | target <player|nearest|clear> | goto <x> <y> <z> | follow | defend | attack | stop | formation <line|column|wedge> | status | dismiss")))
+                "spawn | set kit <kit> (player) | army kit <kit> | whitelist <add|remove|list> | target <player|clear> | goto <x> <y> <z> | follow | defend | attack | stop | formation <line|column|wedge> | status | dismiss")))
             .then(ClientCommands.literal("dismiss").executes(context -> {
                 NullArmyController.dismiss();
                 return reply(context, "All locally tracked Null units dismissed.");
