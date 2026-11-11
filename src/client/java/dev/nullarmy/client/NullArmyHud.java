@@ -27,7 +27,7 @@ public final class NullArmyHud {
             18, 29, 0xFFB7C0CE, true);
         graphics.text(minecraft.font, NullArmyController.orderLabel(),
             18, 43, 0xFFFFFFFF, true);
-        graphics.text(minecraft.font, "NEXT KIT: " + NullArmyController.selectedKit().name().toLowerCase(),
+        graphics.text(minecraft.font, "NEXT SPAWN KIT: " + NullArmyController.selectedKit().commandName(),
             18, 56, 0xFF91C8FF, true);
 
         int index = 0;
