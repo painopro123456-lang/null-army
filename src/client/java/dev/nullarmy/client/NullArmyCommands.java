@@ -56,7 +56,7 @@ public final class NullArmyCommands {
                 .then(ClientCommands.literal("list").executes(c -> reply(c, "Protected players: " + NullArmyController.whitelistStatus()))))
             .then(ClientCommands.literal("kit")
                 .executes(context -> reply(context, "Current kit: " + NullArmyController.selectedKit().commandName()
-                    + ". Choose: sword, mace, elytra_mace. Set it before /null spawn."))
+                    + ". Use /null set kit <kit> to equip yourself."))
                 .then(ClientCommands.literal("sword").executes(context -> kit(context, NullArmyController.Kit.SWORD)))
                 .then(ClientCommands.literal("mace").executes(context -> kit(context, NullArmyController.Kit.MACE)))
                 .then(ClientCommands.literal("elytra_mace").executes(context -> kit(context, NullArmyController.Kit.ELYTRA_MACE))))
@@ -119,8 +119,8 @@ public final class NullArmyCommands {
     }
 
     private static int kit(com.mojang.brigadier.context.CommandContext<FabricClientCommandSource> context, NullArmyController.Kit kit) {
-        NullArmyController.setKit(kit);
-        return reply(context, "Kit set to " + kit.commandName() + ". Use /null spawn to deploy the army with this kit.");
+        NullArmyController.givePlayerKit(kit);
+        return reply(context, "Gave you the " + kit.commandName() + " player kit.");
     }
     private static int formation(com.mojang.brigadier.context.CommandContext<FabricClientCommandSource> context, NullArmyController.Formation formation) {
         NullArmyController.setFormation(formation);
