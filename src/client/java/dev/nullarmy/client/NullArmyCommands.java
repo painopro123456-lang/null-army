@@ -3,14 +3,14 @@ package dev.nullarmy.client;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
+import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.network.chat.Component;
 
 public final class NullArmyCommands {
     private NullArmyCommands() {}
 
-    public static void register(com.mojang.brigadier.CommandDispatcher<?> dispatcher) {
+    public static void register(com.mojang.brigadier.CommandDispatcher<FabricClientCommandSource> dispatcher) {
         dispatcher.register(ClientCommands.literal("null")
             .then(ClientCommands.literal("spawn")
                 .executes(context -> {
@@ -84,15 +84,14 @@ public final class NullArmyCommands {
         );
     }
 
-    private static int formation(com.mojang.brigadier.context.CommandContext<?> context,
+    private static int formation(com.mojang.brigadier.context.CommandContext<FabricClientCommandSource> context,
                                  NullArmyController.Formation formation) {
         NullArmyController.setFormation(formation);
         return reply(context, "Formation changed to " + formation.name().toLowerCase() + ".");
     }
 
-    private static int reply(com.mojang.brigadier.context.CommandContext<?> context, String message) {
-        ((net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource) context.getSource())
-            .sendFeedback(Component.literal("[Null Army] " + message));
+    private static int reply(com.mojang.brigadier.context.CommandContext<FabricClientCommandSource> context, String message) {
+        context.getSource().sendFeedback(Component.literal("[Null Army] " + message));
         return 1;
     }
 }
