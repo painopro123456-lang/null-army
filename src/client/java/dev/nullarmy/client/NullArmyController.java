@@ -150,10 +150,10 @@ public final class NullArmyController {
         return names.isEmpty() ? "owner only" : String.join(", ", names);
     }
 
-    public static void givePlayerKit(Kit kit) {
-        selectedKit = kit;
+    public static boolean givePlayerKit(Kit kit) {
         Minecraft client = Minecraft.getInstance();
-        if (client.player == null) return;
+        if (client.player == null || kit == null || kit == Kit.NONE) return false;
+        selectedKit = kit;
         var player = client.player;
         player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.NETHERITE_HELMET));
         player.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.NETHERITE_LEGGINGS));
@@ -167,6 +167,7 @@ public final class NullArmyController {
             player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(kit == Kit.MACE ? Items.MACE : Items.NETHERITE_SWORD));
             player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(kit == Kit.SWORD ? Items.SHIELD : Items.WIND_CHARGE, kit == Kit.SWORD ? 1 : 16));
         }
+        return true;
     }
 
     public static void setArmyKit(Kit kit) {
@@ -186,6 +187,7 @@ public final class NullArmyController {
     public static void setFormation(Formation next) { formation = next; }
     public static void setKit(Kit next) { selectedKit = next; }
     public static Kit selectedKit() { return selectedKit; }
+    public static String armyKitName() { return armyKit.commandName(); }
     public static int soldierCount() { return (int) UNITS.stream().filter(u -> u.role == UnitRole.SOLDIER).count(); }
     public static int commanderCount() { return (int) UNITS.stream().filter(u -> u.role == UnitRole.COMMANDER).count(); }
     public static int totalCount() { return UNITS.size(); }
@@ -257,15 +259,13 @@ public final class NullArmyController {
     }
 
     private static LivingEntity findTarget(Minecraft client) {
-        if (target.isBlank() || isWhitelisted(target)) return null;
-        List<Player> candidates = client.level.getEntitiesOfClass(
-            Player.class, client.player.getBoundingBox().inflate(128.0),
-            player -> player != client.player && player.isAlive()
-                && player.getName().getString().equalsIgnoreCase(target)
-                && !isWhitelisted(player.getName().getString())
-        );
-        return candidates.stream().min((a, b) ->
-            Double.compare(a.distanceToSqr(client.player), b.distanceToSqr(client.player))).orElse(null);
+        if (target.isBlank() || isWhitelisted(target) || client.level == null || client.player == null) return null;
+        // Search every player currently loaded in this client world, not just a 128-block bubble around the owner.
+        return client.level.players().stream()
+            .filter(player -> player != client.player && player.isAlive())
+            .filter(player -> player.getName().getString().equalsIgnoreCase(target))
+            .filter(player -> !isWhitelisted(player.getName().getString()))
+            .findFirst().orElse(null);
     }
 
     private static boolean isArmyVisual(Entity entity) {
