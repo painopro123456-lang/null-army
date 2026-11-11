@@ -5,15 +5,13 @@ import java.util.Collections;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.monster.WitherSkeleton;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.monster.skeleton.WitherSkeleton;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
@@ -64,7 +62,7 @@ public final class NullArmyController {
     }
 
     private static void createVisual(ClientLevel level, ArmyUnit unit, int index) {
-        WitherSkeleton visual = EntityType.WITHER_SKELETON.create(level).orElse(null);
+        WitherSkeleton visual = EntityTypes.WITHER_SKELETON.create(level).orElse(null);
         if (visual == null) return;
         visual.setNoAi(true);
         visual.setInvulnerable(true);
