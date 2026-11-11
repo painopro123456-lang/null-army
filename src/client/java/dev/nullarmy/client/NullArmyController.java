@@ -81,6 +81,12 @@ public final class NullArmyController {
         return UNITS.size();
     }
 
+    public static String orderLabel() {
+        return "ORDER: " + order.name().toLowerCase()
+            + "   FORMATION: " + formation.name().toLowerCase()
+            + (target.isBlank() ? "" : "   TARGET: " + target);
+    }
+
     public static String status() {
         return "Army: " + commanderCount() + " commanders, " + soldierCount()
             + " soldiers | Order: " + order.name().toLowerCase()
