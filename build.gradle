@@ -12,6 +12,12 @@ base {
 
 loom {
     splitEnvironmentSourceSets()
+    mods {
+        "null_army" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
 }
 
 repositories {
