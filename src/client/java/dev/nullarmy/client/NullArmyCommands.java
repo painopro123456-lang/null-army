@@ -67,8 +67,9 @@ public final class NullArmyCommands {
                         NullArmyController.setTarget("");
                         return reply(context, "Target cleared.");
                     }
+                    if (NullArmyController.isWhitelisted(who)) return reply(context, who + " is whitelisted and cannot be targeted.");
                     NullArmyController.setTarget(who);
-                    return reply(context, "Attack target set to: " + who + ".");
+                    return reply(context, "Target selected: " + who + ". Use /null attack to issue the order.");
                 })))
             .then(ClientCommands.literal("goto")
                 .then(ClientCommands.argument("x", DoubleArgumentType.doubleArg())
@@ -89,8 +90,8 @@ public final class NullArmyCommands {
                 return reply(context, "Army ordered to defend its position.");
             }))
             .then(ClientCommands.literal("attack").executes(context -> {
-                NullArmyController.setOrder(NullArmyController.ArmyOrder.ATTACK);
-                return reply(context, "Army attack order issued against the selected target.");
+                if (!NullArmyController.issueAttackOrder()) return reply(context, "Select a loaded, non-whitelisted player first with /null target <player>.");
+                return reply(context, "Attack order issued; tracking the player's live position.");
             }))
             .then(ClientCommands.literal("stop").executes(context -> {
                 NullArmyController.setOrder(NullArmyController.ArmyOrder.STOP);
