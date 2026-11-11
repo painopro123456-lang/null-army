@@ -3,15 +3,13 @@
 Client-only Fabric mod for Minecraft 26.2.
 
 ## Default army
-Running `/null spawn` creates **15 Null soldiers and 2 Null commanders** (17 units total). The default kit is **Sword**.
+Running `/null spawn` creates **15 Null soldiers and 2 Null commanders** (17 units total). They appear as locally rendered Wither Skeleton units with visible Minecraft equipment. The default kit is **Sword**.
 
 ## Selectable Minecraft kits
-There is one kit command with three equipment choices:
-- **Sword** — sword, shield, and armor.
-- **Mace** — mace and wind charges.
-- **Elytra Mace** — elytra, firework rockets, and a mace for aerial smash attacks.
-
-Choose a kit before spawning. The selected choice is assigned to every unit in the next army.
+Choose one kit before spawning. The selected choice is assigned to every unit in the next army:
+- **Sword** — netherite sword, shield, and netherite armor.
+- **Mace** — mace, wind charges, and netherite armor.
+- **Elytra Mace** — elytra, firework rockets, mace, and protective armor pieces.
 
 ## Commands
 - `/null spawn` — spawn the default 15 + 2 army.
@@ -20,20 +18,18 @@ Choose a kit before spawning. The selected choice is assigned to every unit in t
 - `/null kit sword` — use the sword loadout.
 - `/null kit mace` — use the mace loadout.
 - `/null kit elytra_mace` — use the elytra + mace loadout.
-- `/null target <player|nearest|clear>` — set or clear the army's target.
+- `/null target <player|nearest|clear>` — set or clear a target.
 - `/null goto <x> <y> <z>` — order the army to move to a position.
 - `/null follow` — follow the local player.
-- `/null defend` — hold a defensive posture around the current position.
-- `/null attack` — enter attack-order state against the selected target.
+- `/null defend` — hold position.
+- `/null attack` — approach the selected target and swing when close.
 - `/null stop` — halt movement and hold position.
 - `/null formation <line|column|wedge>` — choose the formation layout.
 - `/null status` — show army composition and current orders.
-- `/null dismiss` — dismiss all locally tracked units.
-
-The current foundation stores the selected kit on each locally simulated unit and shows it in the HUD. Full 3D Null soldiers, visible armor/weapons, actual equipment behavior, combat, and pathfinding are not implemented yet.
+- `/null dismiss` — remove all locally spawned army units.
 
 ## Important client-only limitation
-This project is deliberately client-only. Its commands and army simulation run on the local client. In multiplayer, other players and the server do not receive these units or orders. The client cannot make them deal authoritative damage, change blocks, or control server-owned entities.
+All units are client-side visual entities. They are visible only to the local player and are not spawned on the server. Movement uses local collision-aware entity movement, but it is not full Minecraft mob pathfinding. Attack orders make units approach and swing; they **do not deal damage**. Elytra and rockets are equipped visually; autonomous flight and mace-smash combat are not implemented. Multiplayer players and servers do not receive these units or orders, and the mod cannot change blocks or control server-owned entities.
 
 ## Build
 Requires JDK 25. Run:
