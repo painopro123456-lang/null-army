@@ -1,7 +1,7 @@
 package dev.nullarmy.client;
 
 import net.minecraft.client.model.geom.ModelLayerLocation;
-import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.fabricmc.fabric.api.client.rendering.v1.ModelLayerRegistry;
 import net.minecraft.resources.Identifier;
 
 public final class NullSoldierLayers {
@@ -11,7 +11,7 @@ public final class NullSoldierLayers {
     private NullSoldierLayers() {}
 
     public static void register() {
-        net.minecraft.client.model.geom.EntityModelLayerRegistry.registerLayerDefinition(
+        ModelLayerRegistry.registerModelLayer(
             NULL_SOLDIER, NullSoldierModel::createLayer);
     }
 }
