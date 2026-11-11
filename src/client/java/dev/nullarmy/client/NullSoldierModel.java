@@ -13,7 +13,7 @@ import net.minecraft.util.Mth;
 
 public final class NullSoldierModel extends EntityModel<LivingEntityRenderState> {
     public static final String LAYER = "main";
-    private final ModelPart head, body, leftArm, rightArm, leftLeg, rightLeg;
+    private final ModelPart head, body, leftArm, rightArm, leftLeg, rightLeg, leftShoulder, rightShoulder, backPlate, crest;
 
     public NullSoldierModel(ModelPart root) {
         super(root);
@@ -23,6 +23,10 @@ public final class NullSoldierModel extends EntityModel<LivingEntityRenderState>
         rightArm = root.getChild("right_arm");
         leftLeg = root.getChild("left_leg");
         rightLeg = root.getChild("right_leg");
+        leftShoulder = root.getChild("left_shoulder");
+        rightShoulder = root.getChild("right_shoulder");
+        backPlate = root.getChild("back_plate");
+        crest = root.getChild("crest");
     }
 
     public static LayerDefinition createLayer() {
@@ -59,6 +63,23 @@ public final class NullSoldierModel extends EntityModel<LivingEntityRenderState>
                 .addBox(-2, 0, -2, 4, 10, 4)
                 .texOffs(0, 32).addBox(-2.3f, 7, -2.5f, 5, 4, 5, new CubeDeformation(0.12f)),
             PartPose.offset(-2, 12, 0));
+        root.addOrReplaceChild("left_shoulder",
+            CubeListBuilder.create().texOffs(32, 48)
+                .addBox(-2.8f, -2.5f, -3, 6, 5, 6, new CubeDeformation(0.18f)),
+            PartPose.offset(5, 4, 0));
+        root.addOrReplaceChild("right_shoulder",
+            CubeListBuilder.create().texOffs(32, 48)
+                .addBox(-3.2f, -2.5f, -3, 6, 5, 6, new CubeDeformation(0.18f)),
+            PartPose.offset(-5, 4, 0));
+        root.addOrReplaceChild("back_plate",
+            CubeListBuilder.create().texOffs(48, 32)
+                .addBox(-4, -5, 0, 8, 10, 2, new CubeDeformation(0.12f)),
+            PartPose.offset(0, 12, 2.5f));
+        root.addOrReplaceChild("crest",
+            CubeListBuilder.create().texOffs(0, 48)
+                .addBox(-1, -11, -1, 2, 4, 2)
+                .texOffs(8, 48).addBox(-3, -10, -0.5f, 6, 2, 1),
+            PartPose.offset(0, 2, 0));
         return LayerDefinition.create(mesh, 64, 64);
     }
 
@@ -73,5 +94,9 @@ public final class NullSoldierModel extends EntityModel<LivingEntityRenderState>
         rightLeg.xRot = Mth.cos(swing + Mth.PI) * 1.35f * amount;
         leftArm.xRot = Mth.cos(swing + Mth.PI) * 0.85f * amount;
         rightArm.xRot = Mth.cos(swing) * 0.85f * amount;
+        leftShoulder.xRot = leftArm.xRot * 0.35f;
+        rightShoulder.xRot = rightArm.xRot * 0.35f;
+        backPlate.yRot = Mth.sin(swing) * 0.035f * amount;
+        crest.yRot = head.yRot;
     }
 }
