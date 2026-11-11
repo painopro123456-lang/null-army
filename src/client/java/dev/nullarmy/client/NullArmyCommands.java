@@ -111,6 +111,13 @@ public final class NullArmyCommands {
         );
     }
 
+    private static NullArmyController.Kit parseKit(String name) {
+        for (NullArmyController.Kit kit : NullArmyController.Kit.values()) {
+            if (kit.commandName().equalsIgnoreCase(name)) return kit;
+        }
+        return null;
+    }
+
     private static int kit(com.mojang.brigadier.context.CommandContext<FabricClientCommandSource> context, NullArmyController.Kit kit) {
         NullArmyController.setKit(kit);
         return reply(context, "Kit set to " + kit.commandName() + ". Use /null spawn to deploy the army with this kit.");
