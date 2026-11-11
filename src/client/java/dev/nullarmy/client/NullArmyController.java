@@ -13,6 +13,7 @@ public final class NullArmyController {
     private static final List<ArmyUnit> UNITS = new ArrayList<>();
     private static ArmyOrder order = ArmyOrder.HOLD;
     private static Formation formation = Formation.WEDGE;
+    private static Kit selectedKit = Kit.STANDARD;
     private static String target = "";
     private static double destinationX;
     private static double destinationY;
@@ -30,10 +31,10 @@ public final class NullArmyController {
         int safeCommanders = Math.max(0, Math.min(commanders, MAX_UNITS - safeSoldiers));
         UNITS.clear();
         for (int i = 0; i < safeCommanders; i++) {
-            UNITS.add(new ArmyUnit(UnitRole.COMMANDER, i));
+            UNITS.add(new ArmyUnit(UnitRole.COMMANDER, i, selectedKit));
         }
         for (int i = 0; i < safeSoldiers; i++) {
-            UNITS.add(new ArmyUnit(UnitRole.SOLDIER, i));
+            UNITS.add(new ArmyUnit(UnitRole.SOLDIER, i, selectedKit));
         }
         order = ArmyOrder.FOLLOW;
         target = "";
@@ -69,6 +70,14 @@ public final class NullArmyController {
         formation = next;
     }
 
+    public static void setKit(Kit next) {
+        selectedKit = next;
+    }
+
+    public static Kit selectedKit() {
+        return selectedKit;
+    }
+
     public static int soldierCount() {
         return (int) UNITS.stream().filter(unit -> unit.role == UnitRole.SOLDIER).count();
     }
@@ -91,6 +100,7 @@ public final class NullArmyController {
         return "Army: " + commanderCount() + " commanders, " + soldierCount()
             + " soldiers | Order: " + order.name().toLowerCase()
             + " | Formation: " + formation.name().toLowerCase()
+            + " | Kit: " + selectedKit.name().toLowerCase()
             + " | Target: " + (target.isBlank() ? "none" : target);
     }
 
@@ -160,20 +170,24 @@ public final class NullArmyController {
     public enum UnitRole { SOLDIER, COMMANDER }
     public enum ArmyOrder { FOLLOW, MOVE, DEFEND, ATTACK, STOP, HOLD }
     public enum Formation { LINE, COLUMN, WEDGE }
+    public enum Kit { STANDARD, ASSAULT, SCOUT, HEAVY, ARCHER, MEDIC }
 
     public static final class ArmyUnit {
         private final UnitRole role;
         private final int number;
+        private final Kit kit;
         private double x, y, z;
         private boolean initialized;
 
-        private ArmyUnit(UnitRole role, int number) {
+        private ArmyUnit(UnitRole role, int number, Kit kit) {
             this.role = role;
             this.number = number;
+            this.kit = kit;
         }
 
         public UnitRole role() { return role; }
         public int number() { return number; }
+        public Kit kit() { return kit; }
         public double x() { return x; }
         public double y() { return y; }
         public double z() { return z; }
