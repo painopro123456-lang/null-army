@@ -13,7 +13,7 @@ public final class NullArmyController {
     private static final List<ArmyUnit> UNITS = new ArrayList<>();
     private static ArmyOrder order = ArmyOrder.HOLD;
     private static Formation formation = Formation.WEDGE;
-    private static Kit selectedKit = Kit.STANDARD;
+    private static Kit selectedKit = Kit.SWORD;
     private static String target = "";
     private static double destinationX;
     private static double destinationY;
@@ -22,20 +22,14 @@ public final class NullArmyController {
 
     private NullArmyController() {}
 
-    public static void spawnDefault() {
-        spawn(DEFAULT_SOLDIERS, DEFAULT_COMMANDERS);
-    }
+    public static void spawnDefault() { spawn(DEFAULT_SOLDIERS, DEFAULT_COMMANDERS); }
 
     public static void spawn(int soldiers, int commanders) {
         int safeSoldiers = Math.max(0, Math.min(soldiers, MAX_UNITS));
         int safeCommanders = Math.max(0, Math.min(commanders, MAX_UNITS - safeSoldiers));
         UNITS.clear();
-        for (int i = 0; i < safeCommanders; i++) {
-            UNITS.add(new ArmyUnit(UnitRole.COMMANDER, i, selectedKit));
-        }
-        for (int i = 0; i < safeSoldiers; i++) {
-            UNITS.add(new ArmyUnit(UnitRole.SOLDIER, i, selectedKit));
-        }
+        for (int i = 0; i < safeCommanders; i++) UNITS.add(new ArmyUnit(UnitRole.COMMANDER, i, selectedKit));
+        for (int i = 0; i < safeSoldiers; i++) UNITS.add(new ArmyUnit(UnitRole.SOLDIER, i, selectedKit));
         order = ArmyOrder.FOLLOW;
         target = "";
         hasDestination = false;
@@ -54,9 +48,7 @@ public final class NullArmyController {
     }
 
     public static void goTo(double x, double y, double z) {
-        destinationX = x;
-        destinationY = y;
-        destinationZ = z;
+        destinationX = x; destinationY = y; destinationZ = z;
         hasDestination = true;
         order = ArmyOrder.MOVE;
     }
@@ -66,29 +58,12 @@ public final class NullArmyController {
         if (next == ArmyOrder.FOLLOW) hasDestination = false;
     }
 
-    public static void setFormation(Formation next) {
-        formation = next;
-    }
-
-    public static void setKit(Kit next) {
-        selectedKit = next;
-    }
-
-    public static Kit selectedKit() {
-        return selectedKit;
-    }
-
-    public static int soldierCount() {
-        return (int) UNITS.stream().filter(unit -> unit.role == UnitRole.SOLDIER).count();
-    }
-
-    public static int commanderCount() {
-        return (int) UNITS.stream().filter(unit -> unit.role == UnitRole.COMMANDER).count();
-    }
-
-    public static int totalCount() {
-        return UNITS.size();
-    }
+    public static void setFormation(Formation next) { formation = next; }
+    public static void setKit(Kit next) { selectedKit = next; }
+    public static Kit selectedKit() { return selectedKit; }
+    public static int soldierCount() { return (int) UNITS.stream().filter(unit -> unit.role == UnitRole.SOLDIER).count(); }
+    public static int commanderCount() { return (int) UNITS.stream().filter(unit -> unit.role == UnitRole.COMMANDER).count(); }
+    public static int totalCount() { return UNITS.size(); }
 
     public static String orderLabel() {
         return "ORDER: " + order.name().toLowerCase()
@@ -104,48 +79,29 @@ public final class NullArmyController {
             + " | Target: " + (target.isBlank() ? "none" : target);
     }
 
-    public static List<ArmyUnit> unitsView() {
-        return Collections.unmodifiableList(UNITS);
-    }
+    public static List<ArmyUnit> unitsView() { return Collections.unmodifiableList(UNITS); }
 
     public static void tick(Minecraft client) {
         if (UNITS.isEmpty() || client.player == null) return;
-
-        double px = client.player.getX();
-        double py = client.player.getY();
-        double pz = client.player.getZ();
-
+        double px = client.player.getX(), py = client.player.getY(), pz = client.player.getZ();
         for (int i = 0; i < UNITS.size(); i++) {
             ArmyUnit unit = UNITS.get(i);
             double[] offset = formationOffset(i);
-            double tx = px + offset[0];
-            double ty = py;
-            double tz = pz + offset[1];
-
+            double tx = px + offset[0], ty = py, tz = pz + offset[1];
             if (order == ArmyOrder.MOVE && hasDestination) {
-                tx = destinationX + offset[0];
-                ty = destinationY;
-                tz = destinationZ + offset[1];
+                tx = destinationX + offset[0]; ty = destinationY; tz = destinationZ + offset[1];
             } else if (order == ArmyOrder.HOLD || order == ArmyOrder.DEFEND
                     || order == ArmyOrder.STOP || order == ArmyOrder.ATTACK) {
                 if (!unit.initialized) {
-                    unit.x = px + offset[0];
-                    unit.y = py;
-                    unit.z = pz + offset[1];
+                    unit.x = px + offset[0]; unit.y = py; unit.z = pz + offset[1];
                     unit.initialized = true;
                 }
                 continue;
             }
-
             if (!unit.initialized) {
-                unit.x = tx;
-                unit.y = ty;
-                unit.z = tz;
-                unit.initialized = true;
+                unit.x = tx; unit.y = ty; unit.z = tz; unit.initialized = true;
             } else {
-                double dx = tx - unit.x;
-                double dy = ty - unit.y;
-                double dz = tz - unit.z;
+                double dx = tx - unit.x, dy = ty - unit.y, dz = tz - unit.z;
                 double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
                 double step = Math.min(0.12, distance);
                 if (distance > 0.01) {
@@ -158,8 +114,7 @@ public final class NullArmyController {
     }
 
     private static double[] formationOffset(int index) {
-        int row = index / 3;
-        int column = index % 3;
+        int row = index / 3, column = index % 3;
         return switch (formation) {
             case LINE -> new double[] {(column - 1) * 2.0, row * 2.0};
             case COLUMN -> new double[] {((index % 2) * 1.5) - 0.75, row * 2.0};
@@ -170,7 +125,7 @@ public final class NullArmyController {
     public enum UnitRole { SOLDIER, COMMANDER }
     public enum ArmyOrder { FOLLOW, MOVE, DEFEND, ATTACK, STOP, HOLD }
     public enum Formation { LINE, COLUMN, WEDGE }
-    public enum Kit { STANDARD, ASSAULT, SCOUT, HEAVY, ARCHER, MEDIC }
+    public enum Kit { ELYTRA, MACE, SWORD, ARCHER, ASSAULT }
 
     public static final class ArmyUnit {
         private final UnitRole role;
@@ -178,13 +133,9 @@ public final class NullArmyController {
         private final Kit kit;
         private double x, y, z;
         private boolean initialized;
-
         private ArmyUnit(UnitRole role, int number, Kit kit) {
-            this.role = role;
-            this.number = number;
-            this.kit = kit;
+            this.role = role; this.number = number; this.kit = kit;
         }
-
         public UnitRole role() { return role; }
         public int number() { return number; }
         public Kit kit() { return kit; }
