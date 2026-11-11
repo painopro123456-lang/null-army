@@ -27,35 +27,31 @@ public final class NullArmyCommands {
                             return reply(context, "Created " + soldiers + " soldiers and " + commanders + " commanders.");
                         }))))
             .then(ClientCommands.literal("kit")
-                .executes(context -> reply(context, "Selected kit: " + NullArmyController.selectedKit().name().toLowerCase()
-                    + ". Choose: elytra, mace, sword, archer, assault. Kit applies to the next spawn."))
-                .then(ClientCommands.literal("elytra").executes(context -> kit(context, NullArmyController.Kit.ELYTRA)))
-                .then(ClientCommands.literal("mace").executes(context -> kit(context, NullArmyController.Kit.MACE)))
+                .executes(context -> reply(context, "Current kit: " + NullArmyController.selectedKit().commandName()
+                    + ". Choose: sword, mace, elytra_mace. Set it before /null spawn."))
                 .then(ClientCommands.literal("sword").executes(context -> kit(context, NullArmyController.Kit.SWORD)))
-                .then(ClientCommands.literal("archer").executes(context -> kit(context, NullArmyController.Kit.ARCHER)))
-                .then(ClientCommands.literal("assault").executes(context -> kit(context, NullArmyController.Kit.ASSAULT))))
+                .then(ClientCommands.literal("mace").executes(context -> kit(context, NullArmyController.Kit.MACE)))
+                .then(ClientCommands.literal("elytra_mace").executes(context -> kit(context, NullArmyController.Kit.ELYTRA_MACE))))
             .then(ClientCommands.literal("target")
-                .then(ClientCommands.argument("who", StringArgumentType.word())
-                    .executes(context -> {
-                        String who = StringArgumentType.getString(context, "who");
-                        if (who.equalsIgnoreCase("clear")) {
-                            NullArmyController.setTarget("");
-                            return reply(context, "Target cleared.");
-                        }
-                        NullArmyController.setTarget(who);
-                        return reply(context, "Attack target set to: " + who + ".");
-                    })))
+                .then(ClientCommands.argument("who", StringArgumentType.word()).executes(context -> {
+                    String who = StringArgumentType.getString(context, "who");
+                    if (who.equalsIgnoreCase("clear")) {
+                        NullArmyController.setTarget("");
+                        return reply(context, "Target cleared.");
+                    }
+                    NullArmyController.setTarget(who);
+                    return reply(context, "Attack target set to: " + who + ".");
+                })))
             .then(ClientCommands.literal("goto")
                 .then(ClientCommands.argument("x", DoubleArgumentType.doubleArg())
                     .then(ClientCommands.argument("y", DoubleArgumentType.doubleArg())
-                        .then(ClientCommands.argument("z", DoubleArgumentType.doubleArg())
-                            .executes(context -> {
-                                double x = DoubleArgumentType.getDouble(context, "x");
-                                double y = DoubleArgumentType.getDouble(context, "y");
-                                double z = DoubleArgumentType.getDouble(context, "z");
-                                NullArmyController.goTo(x, y, z);
-                                return reply(context, "Army movement order set to " + x + " " + y + " " + z + ".");
-                            })))))
+                        .then(ClientCommands.argument("z", DoubleArgumentType.doubleArg()).executes(context -> {
+                            double x = DoubleArgumentType.getDouble(context, "x");
+                            double y = DoubleArgumentType.getDouble(context, "y");
+                            double z = DoubleArgumentType.getDouble(context, "z");
+                            NullArmyController.goTo(x, y, z);
+                            return reply(context, "Army movement order set to " + x + " " + y + " " + z + ".");
+                        })))))
             .then(ClientCommands.literal("follow").executes(context -> {
                 NullArmyController.setOrder(NullArmyController.ArmyOrder.FOLLOW);
                 return reply(context, "Army ordered to follow you.");
@@ -78,7 +74,7 @@ public final class NullArmyCommands {
                 .then(ClientCommands.literal("wedge").executes(context -> formation(context, NullArmyController.Formation.WEDGE))))
             .then(ClientCommands.literal("status").executes(context -> reply(context, NullArmyController.status())))
             .then(ClientCommands.literal("help").executes(context -> reply(context,
-                "spawn | spawn <soldiers> <commanders> | target <player|nearest|clear> | goto <x> <y> <z> | follow | defend | attack | stop | kit <elytra|mace|sword|archer|assault> | formation <line|column|wedge> | status | dismiss")))
+                "spawn | spawn <soldiers> <commanders> | kit <sword|mace|elytra_mace> | target <player|nearest|clear> | goto <x> <y> <z> | follow | defend | attack | stop | formation <line|column|wedge> | status | dismiss")))
             .then(ClientCommands.literal("dismiss").executes(context -> {
                 NullArmyController.dismiss();
                 return reply(context, "All locally tracked Null units dismissed.");
@@ -86,18 +82,14 @@ public final class NullArmyCommands {
         );
     }
 
-    private static int kit(com.mojang.brigadier.context.CommandContext<FabricClientCommandSource> context,
-                           NullArmyController.Kit kit) {
+    private static int kit(com.mojang.brigadier.context.CommandContext<FabricClientCommandSource> context, NullArmyController.Kit kit) {
         NullArmyController.setKit(kit);
-        return reply(context, "Kit set to " + kit.name().toLowerCase() + ". Use /null spawn to deploy the army with this kit.");
+        return reply(context, "Kit set to " + kit.commandName() + ". Use /null spawn to deploy the army with this kit.");
     }
-
-    private static int formation(com.mojang.brigadier.context.CommandContext<FabricClientCommandSource> context,
-                                 NullArmyController.Formation formation) {
+    private static int formation(com.mojang.brigadier.context.CommandContext<FabricClientCommandSource> context, NullArmyController.Formation formation) {
         NullArmyController.setFormation(formation);
         return reply(context, "Formation changed to " + formation.name().toLowerCase() + ".");
     }
-
     private static int reply(com.mojang.brigadier.context.CommandContext<FabricClientCommandSource> context, String message) {
         context.getSource().sendFeedback(Component.literal("[Null Army] " + message));
         return 1;
