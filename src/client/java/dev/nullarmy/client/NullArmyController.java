@@ -12,7 +12,7 @@ import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.monster.skeleton.WitherSkeleton;
+
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
@@ -63,7 +63,7 @@ public final class NullArmyController {
     }
 
     private static void createVisual(ClientLevel level, ArmyUnit unit, int index) {
-        WitherSkeleton visual = EntityTypes.WITHER_SKELETON.create(level, EntitySpawnReason.COMMAND);
+        NullSoldierEntity visual = NullSoldierEntityType.TYPE.create(level, EntitySpawnReason.COMMAND);
         if (visual == null) return;
         visual.setNoAi(true);
         visual.setInvulnerable(true);
@@ -78,7 +78,7 @@ public final class NullArmyController {
         unit.visual = visual;
     }
 
-    private static void equip(WitherSkeleton mob, Kit kit) {
+    private static void equip(NullSoldierEntity mob, Kit kit) {
         mob.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.NETHERITE_HELMET));
         mob.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.NETHERITE_LEGGINGS));
         mob.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.NETHERITE_BOOTS));
@@ -208,7 +208,7 @@ public final class NullArmyController {
         return false;
     }
 
-    private static void face(WitherSkeleton mob, double x, double z) {
+    private static void face(NullSoldierEntity mob, double x, double z) {
         double dx = x - mob.getX();
         double dz = z - mob.getZ();
         if (Math.abs(dx) + Math.abs(dz) < 0.001) return;
@@ -243,7 +243,7 @@ public final class NullArmyController {
         private final Kit kit;
         private double x, y, z;
         private boolean initialized;
-        private WitherSkeleton visual;
+        private NullSoldierEntity visual;
         private ArmyUnit(UnitRole role, int number, Kit kit) { this.role = role; this.number = number; this.kit = kit; }
         public UnitRole role() { return role; }
         public int number() { return number; }
