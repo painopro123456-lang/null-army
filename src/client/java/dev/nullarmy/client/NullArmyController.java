@@ -4,6 +4,20 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.WitherSkeleton;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.network.chat.Component;
 
 public final class NullArmyController {
     public static final int DEFAULT_SOLDIERS = 15;
@@ -16,24 +30,83 @@ public final class NullArmyController {
     private static String target = "";
     private static double destinationX, destinationY, destinationZ;
     private static boolean hasDestination;
+    private static ClientLevel activeLevel;
+    private static int nextEntityId = -20000;
+    private static int tickCounter;
 
     private NullArmyController() {}
 
     public static void spawnDefault() { spawn(DEFAULT_SOLDIERS, DEFAULT_COMMANDERS); }
 
     public static void spawn(int soldiers, int commanders) {
+        Minecraft client = Minecraft.getInstance();
+        dismissVisuals();
         int safeSoldiers = Math.max(0, Math.min(soldiers, MAX_UNITS));
         int safeCommanders = Math.max(0, Math.min(commanders, MAX_UNITS - safeSoldiers));
-        UNITS.clear();
         for (int i = 0; i < safeCommanders; i++) UNITS.add(new ArmyUnit(UnitRole.COMMANDER, i, selectedKit));
         for (int i = 0; i < safeSoldiers; i++) UNITS.add(new ArmyUnit(UnitRole.SOLDIER, i, selectedKit));
         order = ArmyOrder.FOLLOW;
         target = "";
         hasDestination = false;
+        tickCounter = 0;
+        if (client.level != null && client.player != null) {
+            activeLevel = client.level;
+            for (int i = 0; i < UNITS.size(); i++) {
+                ArmyUnit unit = UNITS.get(i);
+                double[] offset = formationOffset(i);
+                unit.x = client.player.getX() + offset[0];
+                unit.y = client.player.getY();
+                unit.z = client.player.getZ() + offset[1];
+                unit.initialized = true;
+                createVisual(client.level, unit, i);
+            }
+        }
+    }
+
+    private static void createVisual(ClientLevel level, ArmyUnit unit, int index) {
+        WitherSkeleton visual = EntityType.WITHER_SKELETON.create(level).orElse(null);
+        if (visual == null) return;
+        visual.setNoAi(true);
+        visual.setInvulnerable(true);
+        visual.setSilent(true);
+        visual.setCustomName(Component.literal(unit.role == UnitRole.COMMANDER
+            ? "Null Commander " + (unit.number + 1) : "Null Soldier " + (unit.number + 1)));
+        visual.setCustomNameVisible(true);
+        equip(visual, unit.kit);
+        visual.setPos(unit.x, unit.y, unit.z);
+        level.addEntity(nextEntityId--, visual);
+        unit.visual = visual;
+    }
+
+    private static void equip(WitherSkeleton mob, Kit kit) {
+        mob.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.NETHERITE_HELMET));
+        mob.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.NETHERITE_LEGGINGS));
+        mob.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.NETHERITE_BOOTS));
+        if (kit == Kit.ELYTRA_MACE) {
+            mob.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.ELYTRA));
+            mob.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.MACE));
+            mob.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.FIREWORK_ROCKET, 64));
+        } else {
+            mob.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.NETHERITE_CHESTPLATE));
+            mob.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(
+                kit == Kit.MACE ? Items.MACE : Items.NETHERITE_SWORD));
+            if (kit == Kit.SWORD) mob.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.SHIELD));
+            else mob.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.WIND_CHARGE, 16));
+        }
+    }
+
+    private static void dismissVisuals() {
+        for (ArmyUnit unit : UNITS) {
+            if (unit.visual != null) unit.visual.discard();
+        }
+        UNITS.clear();
     }
 
     public static void dismiss() {
-        UNITS.clear(); target = ""; hasDestination = false; order = ArmyOrder.HOLD;
+        dismissVisuals();
+        target = "";
+        hasDestination = false;
+        order = ArmyOrder.HOLD;
     }
     public static void setTarget(String value) {
         target = value == null ? "" : value;
@@ -67,31 +140,82 @@ public final class NullArmyController {
     public static List<ArmyUnit> unitsView() { return Collections.unmodifiableList(UNITS); }
 
     public static void tick(Minecraft client) {
-        if (UNITS.isEmpty() || client.player == null) return;
+        if (client.level == null || client.player == null) return;
+        if (activeLevel != client.level) {
+            UNITS.clear();
+            activeLevel = client.level;
+            target = "";
+            hasDestination = false;
+            order = ArmyOrder.HOLD;
+            return;
+        }
+        if (UNITS.isEmpty()) return;
+        tickCounter++;
+        LivingEntity targetEntity = order == ArmyOrder.ATTACK ? findTarget(client) : null;
         double px = client.player.getX(), py = client.player.getY(), pz = client.player.getZ();
         for (int i = 0; i < UNITS.size(); i++) {
             ArmyUnit unit = UNITS.get(i);
+            if (unit.visual == null || unit.visual.isRemoved()) continue;
             double[] offset = formationOffset(i);
             double tx = px + offset[0], ty = py, tz = pz + offset[1];
             if (order == ArmyOrder.MOVE && hasDestination) {
                 tx = destinationX + offset[0]; ty = destinationY; tz = destinationZ + offset[1];
-            } else if (order == ArmyOrder.HOLD || order == ArmyOrder.DEFEND || order == ArmyOrder.STOP || order == ArmyOrder.ATTACK) {
-                if (!unit.initialized) {
-                    unit.x = px + offset[0]; unit.y = py; unit.z = pz + offset[1]; unit.initialized = true;
+            } else if (order == ArmyOrder.ATTACK) {
+                if (targetEntity == null) continue;
+                tx = targetEntity.getX();
+                ty = targetEntity.getY();
+                tz = targetEntity.getZ();
+                double distanceToTarget = unit.visual.distanceTo(targetEntity);
+                if (distanceToTarget < 2.6) {
+                    face(unit.visual, targetEntity.getX(), targetEntity.getZ());
+                    if (tickCounter % 12 == 0) unit.visual.swing(InteractionHand.MAIN_HAND);
+                    continue;
                 }
+            } else if (order == ArmyOrder.HOLD || order == ArmyOrder.DEFEND || order == ArmyOrder.STOP) {
                 continue;
             }
-            if (!unit.initialized) {
-                unit.x = tx; unit.y = ty; unit.z = tz; unit.initialized = true;
-            } else {
-                double dx = tx - unit.x, dy = ty - unit.y, dz = tz - unit.z;
-                double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
-                double step = Math.min(0.12, distance);
-                if (distance > 0.01) {
-                    unit.x += dx / distance * step; unit.y += dy / distance * step; unit.z += dz / distance * step;
-                }
+
+            double dx = tx - unit.visual.getX();
+            double dz = tz - unit.visual.getZ();
+            double distance = Math.sqrt(dx * dx + dz * dz);
+            if (distance > 0.15) {
+                double step = Math.min(0.13, distance);
+                double mx = dx / distance * step;
+                double mz = dz / distance * step;
+                face(unit.visual, tx, tz);
+                unit.visual.move(MoverType.SELF, new Vec3(mx, 0.0, mz));
             }
+            unit.x = unit.visual.getX();
+            unit.y = unit.visual.getY();
+            unit.z = unit.visual.getZ();
         }
+    }
+
+    private static LivingEntity findTarget(Minecraft client) {
+        if (target.isBlank()) return null;
+        List<LivingEntity> candidates = client.level.getEntitiesOfClass(
+            LivingEntity.class, client.player.getBoundingBox().inflate(64.0),
+            entity -> entity != client.player && entity.isAlive() && !isArmyVisual(entity)
+                && (target.equalsIgnoreCase("nearest")
+                    || entity.getName().getString().equalsIgnoreCase(target))
+        );
+        return candidates.stream().min((a, b) ->
+            Double.compare(a.distanceToSqr(client.player), b.distanceToSqr(client.player))).orElse(null);
+    }
+
+    private static boolean isArmyVisual(Entity entity) {
+        for (ArmyUnit unit : UNITS) if (unit.visual == entity) return true;
+        return false;
+    }
+
+    private static void face(WitherSkeleton mob, double x, double z) {
+        double dx = x - mob.getX();
+        double dz = z - mob.getZ();
+        if (Math.abs(dx) + Math.abs(dz) < 0.001) return;
+        float yaw = (float) (Math.toDegrees(Math.atan2(dz, dx)) - 90.0);
+        mob.setYRot(yaw);
+        mob.setYBodyRot(yaw);
+        mob.setYHeadRot(yaw);
     }
 
     private static double[] formationOffset(int index) {
@@ -119,6 +243,7 @@ public final class NullArmyController {
         private final Kit kit;
         private double x, y, z;
         private boolean initialized;
+        private WitherSkeleton visual;
         private ArmyUnit(UnitRole role, int number, Kit kit) { this.role = role; this.number = number; this.kit = kit; }
         public UnitRole role() { return role; }
         public int number() { return number; }
