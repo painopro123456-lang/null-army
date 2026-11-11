@@ -8,6 +8,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.LivingEntity;
@@ -62,7 +63,7 @@ public final class NullArmyController {
     }
 
     private static void createVisual(ClientLevel level, ArmyUnit unit, int index) {
-        WitherSkeleton visual = EntityTypes.WITHER_SKELETON.create(level).orElse(null);
+        WitherSkeleton visual = EntityTypes.WITHER_SKELETON.create(level, EntitySpawnReason.COMMAND);
         if (visual == null) return;
         visual.setNoAi(true);
         visual.setInvulnerable(true);
@@ -72,7 +73,8 @@ public final class NullArmyController {
         visual.setCustomNameVisible(true);
         equip(visual, unit.kit);
         visual.setPos(unit.x, unit.y, unit.z);
-        level.addEntity(nextEntityId--, visual);
+        visual.setId(nextEntityId--);
+        level.addEntity(visual);
         unit.visual = visual;
     }
 
