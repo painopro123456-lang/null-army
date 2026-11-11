@@ -67,6 +67,10 @@ public final class NullArmyCommands {
                         NullArmyController.setTarget("");
                         return reply(context, "Target cleared.");
                     }
+                    if (who.equalsIgnoreCase("nearest")) {
+                        who = NullArmyController.selectNearestTarget();
+                        if (who.isBlank()) return reply(context, "No loaded, alive, non-whitelisted player is available to target.");
+                    }
                     if (NullArmyController.isWhitelisted(who)) return reply(context, who + " is whitelisted and cannot be targeted.");
                     NullArmyController.setTarget(who);
                     return reply(context, "Target selected: " + who + ". Use /null attack to issue the order.");
