@@ -115,6 +115,20 @@ public final class NullArmyController {
     }
     public static void setTarget(String value) { target = value == null ? "" : value; }
 
+    /** Selects the nearest currently loaded, alive, non-owner, non-whitelisted player. */
+    public static String selectNearestTarget() {
+        Minecraft client = Minecraft.getInstance();
+        if (client.level == null || client.player == null) return "";
+        Player nearest = client.level.players().stream()
+            .filter(player -> player != client.player && player.isAlive())
+            .filter(player -> !isWhitelisted(player.getName().getString()))
+            .min(java.util.Comparator.comparingDouble(client.player::distanceToSqr))
+            .orElse(null);
+        if (nearest == null) return "";
+        target = nearest.getName().getString();
+        return target;
+    }
+
     public static boolean issueAttackOrder() {
         Minecraft client = Minecraft.getInstance();
         if (target.isBlank() || isWhitelisted(target) || client.level == null || findTarget(client) == null) return false;
