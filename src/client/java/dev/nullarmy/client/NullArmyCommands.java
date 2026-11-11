@@ -22,21 +22,18 @@ public final class NullArmyCommands {
                         .executes(context -> {
                             int soldiers = IntegerArgumentType.getInteger(context, "soldiers");
                             int commanders = IntegerArgumentType.getInteger(context, "commanders");
-                            if (soldiers + commanders > 64) {
-                                return reply(context, "Maximum local army size is 64 units.");
-                            }
+                            if (soldiers + commanders > 64) return reply(context, "Maximum local army size is 64 units.");
                             NullArmyController.spawn(soldiers, commanders);
                             return reply(context, "Created " + soldiers + " soldiers and " + commanders + " commanders.");
                         }))))
             .then(ClientCommands.literal("kit")
                 .executes(context -> reply(context, "Selected kit: " + NullArmyController.selectedKit().name().toLowerCase()
-                    + ". Choose: standard, assault, scout, heavy, archer, medic. Kit applies to the next spawn."))
-                .then(ClientCommands.literal("standard").executes(context -> kit(context, NullArmyController.Kit.STANDARD)))
-                .then(ClientCommands.literal("assault").executes(context -> kit(context, NullArmyController.Kit.ASSAULT)))
-                .then(ClientCommands.literal("scout").executes(context -> kit(context, NullArmyController.Kit.SCOUT)))
-                .then(ClientCommands.literal("heavy").executes(context -> kit(context, NullArmyController.Kit.HEAVY)))
+                    + ". Choose: elytra, mace, sword, archer, assault. Kit applies to the next spawn."))
+                .then(ClientCommands.literal("elytra").executes(context -> kit(context, NullArmyController.Kit.ELYTRA)))
+                .then(ClientCommands.literal("mace").executes(context -> kit(context, NullArmyController.Kit.MACE)))
+                .then(ClientCommands.literal("sword").executes(context -> kit(context, NullArmyController.Kit.SWORD)))
                 .then(ClientCommands.literal("archer").executes(context -> kit(context, NullArmyController.Kit.ARCHER)))
-                .then(ClientCommands.literal("medic").executes(context -> kit(context, NullArmyController.Kit.MEDIC))))
+                .then(ClientCommands.literal("assault").executes(context -> kit(context, NullArmyController.Kit.ASSAULT))))
             .then(ClientCommands.literal("target")
                 .then(ClientCommands.argument("who", StringArgumentType.word())
                     .executes(context -> {
@@ -59,40 +56,33 @@ public final class NullArmyCommands {
                                 NullArmyController.goTo(x, y, z);
                                 return reply(context, "Army movement order set to " + x + " " + y + " " + z + ".");
                             })))))
-            .then(ClientCommands.literal("follow")
-                .executes(context -> {
-                    NullArmyController.setOrder(NullArmyController.ArmyOrder.FOLLOW);
-                    return reply(context, "Army ordered to follow you.");
-                }))
-            .then(ClientCommands.literal("defend")
-                .executes(context -> {
-                    NullArmyController.setOrder(NullArmyController.ArmyOrder.DEFEND);
-                    return reply(context, "Army ordered to defend its position.");
-                }))
-            .then(ClientCommands.literal("attack")
-                .executes(context -> {
-                    NullArmyController.setOrder(NullArmyController.ArmyOrder.ATTACK);
-                    return reply(context, "Army attack order issued against the selected target.");
-                }))
-            .then(ClientCommands.literal("stop")
-                .executes(context -> {
-                    NullArmyController.setOrder(NullArmyController.ArmyOrder.STOP);
-                    return reply(context, "Army halted.");
-                }))
+            .then(ClientCommands.literal("follow").executes(context -> {
+                NullArmyController.setOrder(NullArmyController.ArmyOrder.FOLLOW);
+                return reply(context, "Army ordered to follow you.");
+            }))
+            .then(ClientCommands.literal("defend").executes(context -> {
+                NullArmyController.setOrder(NullArmyController.ArmyOrder.DEFEND);
+                return reply(context, "Army ordered to defend its position.");
+            }))
+            .then(ClientCommands.literal("attack").executes(context -> {
+                NullArmyController.setOrder(NullArmyController.ArmyOrder.ATTACK);
+                return reply(context, "Army attack order issued against the selected target.");
+            }))
+            .then(ClientCommands.literal("stop").executes(context -> {
+                NullArmyController.setOrder(NullArmyController.ArmyOrder.STOP);
+                return reply(context, "Army halted.");
+            }))
             .then(ClientCommands.literal("formation")
                 .then(ClientCommands.literal("line").executes(context -> formation(context, NullArmyController.Formation.LINE)))
                 .then(ClientCommands.literal("column").executes(context -> formation(context, NullArmyController.Formation.COLUMN)))
                 .then(ClientCommands.literal("wedge").executes(context -> formation(context, NullArmyController.Formation.WEDGE))))
-            .then(ClientCommands.literal("status")
-                .executes(context -> reply(context, NullArmyController.status())))
-            .then(ClientCommands.literal("help")
-                .executes(context -> reply(context,
-                    "spawn | spawn <soldiers> <commanders> | target <player|nearest|clear> | goto <x> <y> <z> | follow | defend | attack | stop | kit <standard|assault|scout|heavy|archer|medic> | formation <line|column|wedge> | status | dismiss")))
-            .then(ClientCommands.literal("dismiss")
-                .executes(context -> {
-                    NullArmyController.dismiss();
-                    return reply(context, "All locally tracked Null units dismissed.");
-                }))
+            .then(ClientCommands.literal("status").executes(context -> reply(context, NullArmyController.status())))
+            .then(ClientCommands.literal("help").executes(context -> reply(context,
+                "spawn | spawn <soldiers> <commanders> | target <player|nearest|clear> | goto <x> <y> <z> | follow | defend | attack | stop | kit <elytra|mace|sword|archer|assault> | formation <line|column|wedge> | status | dismiss")))
+            .then(ClientCommands.literal("dismiss").executes(context -> {
+                NullArmyController.dismiss();
+                return reply(context, "All locally tracked Null units dismissed.");
+            }))
         );
     }
 
