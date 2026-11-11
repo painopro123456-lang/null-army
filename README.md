@@ -3,20 +3,23 @@
 Client-only Fabric mod for Minecraft 26.2.
 
 ## Default army
-Running `/null spawn` creates **15 Null soldiers and 2 Null commanders** (17 units total). The default kit is Sword.
+Running `/null spawn` creates **15 Null soldiers and 2 Null commanders** (17 units total). The default kit is **Sword**.
 
-## Minecraft kits
-- **Elytra** — elytra and firework rockets for aerial movement.
-- **Mace** — mace and wind charges for smash attacks.
+## Selectable Minecraft kits
+There is one kit command with three equipment choices:
 - **Sword** — sword, shield, and armor.
-- **Archer** — bow, arrows, and a sword as backup.
-- **Assault** — full combat armor, sword, bow, and shield.
+- **Mace** — mace and wind charges.
+- **Elytra Mace** — elytra, firework rockets, and a mace for aerial smash attacks.
+
+Choose a kit before spawning. The selected choice is assigned to every unit in the next army.
 
 ## Commands
 - `/null spawn` — spawn the default 15 + 2 army.
 - `/null spawn <soldiers> <commanders>` — choose a custom composition.
-- `/null kit` — show the selected kit.
-- `/null kit <elytra|mace|sword|archer|assault>` — choose the kit assigned to the next army you spawn.
+- `/null kit` — show the current kit and available choices.
+- `/null kit sword` — use the sword loadout.
+- `/null kit mace` — use the mace loadout.
+- `/null kit elytra_mace` — use the elytra + mace loadout.
 - `/null target <player|nearest|clear>` — set or clear the army's target.
 - `/null goto <x> <y> <z>` — order the army to move to a position.
 - `/null follow` — follow the local player.
