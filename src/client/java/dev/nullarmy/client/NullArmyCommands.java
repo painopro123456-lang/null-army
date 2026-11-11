@@ -28,6 +28,15 @@ public final class NullArmyCommands {
                             NullArmyController.spawn(soldiers, commanders);
                             return reply(context, "Created " + soldiers + " soldiers and " + commanders + " commanders.");
                         }))))
+            .then(ClientCommands.literal("kit")
+                .executes(context -> reply(context, "Selected kit: " + NullArmyController.selectedKit().name().toLowerCase()
+                    + ". Choose: standard, assault, scout, heavy, archer, medic. Kit applies to the next spawn."))
+                .then(ClientCommands.literal("standard").executes(context -> kit(context, NullArmyController.Kit.STANDARD)))
+                .then(ClientCommands.literal("assault").executes(context -> kit(context, NullArmyController.Kit.ASSAULT)))
+                .then(ClientCommands.literal("scout").executes(context -> kit(context, NullArmyController.Kit.SCOUT)))
+                .then(ClientCommands.literal("heavy").executes(context -> kit(context, NullArmyController.Kit.HEAVY)))
+                .then(ClientCommands.literal("archer").executes(context -> kit(context, NullArmyController.Kit.ARCHER)))
+                .then(ClientCommands.literal("medic").executes(context -> kit(context, NullArmyController.Kit.MEDIC))))
             .then(ClientCommands.literal("target")
                 .then(ClientCommands.argument("who", StringArgumentType.word())
                     .executes(context -> {
@@ -78,13 +87,19 @@ public final class NullArmyCommands {
                 .executes(context -> reply(context, NullArmyController.status())))
             .then(ClientCommands.literal("help")
                 .executes(context -> reply(context,
-                    "spawn | spawn <soldiers> <commanders> | target <player|nearest|clear> | goto <x> <y> <z> | follow | defend | attack | stop | formation <line|column|wedge> | status | dismiss")))
+                    "spawn | spawn <soldiers> <commanders> | target <player|nearest|clear> | goto <x> <y> <z> | follow | defend | attack | stop | kit <standard|assault|scout|heavy|archer|medic> | formation <line|column|wedge> | status | dismiss")))
             .then(ClientCommands.literal("dismiss")
                 .executes(context -> {
                     NullArmyController.dismiss();
                     return reply(context, "All locally tracked Null units dismissed.");
                 }))
         );
+    }
+
+    private static int kit(com.mojang.brigadier.context.CommandContext<FabricClientCommandSource> context,
+                           NullArmyController.Kit kit) {
+        NullArmyController.setKit(kit);
+        return reply(context, "Kit set to " + kit.name().toLowerCase() + ". Use /null spawn to deploy the army with this kit.");
     }
 
     private static int formation(com.mojang.brigadier.context.CommandContext<FabricClientCommandSource> context,
