@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "null_army",
+  "version": "${version}",
+  "name": "Null Army",
+  "description": "A client-side commandable Null army for Minecraft 26.2.",
+  "authors": ["Null Army"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "dev.nullarmy.client.NullArmyClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~26.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}
