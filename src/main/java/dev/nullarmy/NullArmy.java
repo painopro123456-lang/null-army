@@ -1,14 +1,11 @@
 package dev.nullarmy;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.network.chat.Component;
-
-import java.util.Locale;
 
 public final class NullArmy implements ModInitializer {
     @Override
@@ -18,10 +15,10 @@ public final class NullArmy implements ModInitializer {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
             dispatcher.register(Commands.literal("pvpbot")
                 .then(Commands.literal("spawn")
-                    .then(Commands.argument("username", net.minecraft.commands.arguments.StringArgumentType.word())
+                    .then(Commands.argument("username", StringArgumentType.word())
                         .executes(context -> manager.spawn(
                             context.getSource(),
-                            net.minecraft.commands.arguments.StringArgumentType.getString(context, "username")
+                            StringArgumentType.getString(context, "username")
                         ))))
                 .then(Commands.literal("kill")
                     .executes(context -> manager.kill(context.getSource())))
