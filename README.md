@@ -1,41 +1,28 @@
-# Null Army
+# Null Army — PvP Bot
 
-Client-only Fabric mod for Minecraft 26.2.
+A server-side Fabric mod for Minecraft 26.2. This project replaces the former client-only 17-unit army with one server-authoritative PvP practice bot.
 
-## Default army
-Running `/null spawn` creates **15 Null soldiers and 2 Null commanders** (17 units total). They appear as locally rendered custom Null soldier models. They start unequipped unless you have selected an army kit. The default kit is **Sword**.
-
-## Selectable Minecraft kits
-Choose one kit before spawning. The selected choice is assigned to every unit in the next army:
-- **Sword** — netherite sword, shield, and netherite armor.
-- **Mace** — mace, wind charges, and netherite armor.
-- **Elytra Mace** — elytra, firework rockets, mace, and protective armor pieces.
+## Requirements
+- Minecraft Java 26.2
+- Fabric Loader 0.19.3+
+- Fabric API 0.161.0+26.2
+- Java 25
+- Install on the server. For LAN/singleplayer, the integrated server loads it automatically.
 
 ## Commands
-- `/null spawn` — spawn the default 15 + 2 army.
-- `/null spawn <soldiers> <commanders>` — choose a custom composition.
-- `/null kit` — show the current kit and available choices.
-- `/null kit sword` — use the sword loadout.
-- `/null kit mace` — use the mace loadout.
-- `/null kit elytra_mace` — use the elytra + mace loadout.
-- `/null target <player>` — select one specific loaded player. `/null target nearest` explicitly selects the nearest loaded, alive player who is not whitelisted. `/null target clear` clears the selection.
-- `/null goto <x> <y> <z>` — order the army to move to a position.
-- `/null follow` — follow the local player.
-- `/null defend` — hold position.
-- `/null attack` — approach the selected target and swing when close.
-- `/null stop` — halt movement and hold position.
-- `/null formation <line|column|wedge>` — choose the formation layout.
-- `/null status` — show army composition and current orders.
-- `/null dismiss` — remove all locally spawned army units.
+- `/pvpbot spawn <username>` — spawn the single bot using the supplied display name.
+- `/pvpbot kill` — remove the bot.
+- `/pvpbot target <player>` — make the bot attack a specific online player.
+- `/pvpbot target nearest` — target the nearest eligible real player.
+- `/pvpbot stop` — stop the bot's combat AI without removing it.
 
-## Important client-only limitation
-All units are client-side visual entities. They are visible only to the local player and are not spawned on the server. Movement uses local entity movement with collision handling, but it is not full Minecraft mob pathfinding. Attack orders make units approach and swing at the selected loaded player; they **do not deal damage**. Real damage and shared visibility require a server-side implementation, which is intentionally deferred. Elytra and rockets are equipped visually; autonomous flight and mace-smash combat are not implemented. Multiplayer players and servers do not receive these units or orders, and the mod cannot change blocks or control server-owned entities.
+Only one bot can exist at once. The bot is a server-side fake player entity, so nearby players receive its entity spawn and movement through normal server tracking.
+
+## Identity note
+The supplied username is a display/profile name for this fake entity. It does not log in as, authenticate as, or grant access to the real Minecraft account with that username. The initial implementation uses an offline UUID and does not fetch or copy account skins.
 
 ## Build
-Requires JDK 25. Run:
+Run `gradle build` with Java 25. The mod JAR is written to `build/libs/`.
 
-```sh
-gradle build
-```
-
-The mod JAR is written to `build/libs/`.
+## Status
+This is the clean replacement baseline. The fake-player lifecycle and command layer are implemented first; combat movement and attack behavior are deliberately kept conservative until verified against a live 26.2 server. Do not treat an untested build as a finished combat bot.
